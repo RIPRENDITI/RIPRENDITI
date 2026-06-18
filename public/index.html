@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>RIPRENDI.TI — Recupera i tuoi soldi</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a1a;color:#fff;overflow-x:hidden;min-height:100vh}
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;background:radial-gradient(ellipse at 50% 0%,#1a1a3e 0%,#0a0a1a 70%)}
+.hero::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");opacity:.5}
+.badge{display:inline-block;background:rgba(108,92,231,.2);border:1px solid rgba(108,92,231,.3);color:#a29bfe;padding:.4rem 1.2rem;border-radius:50px;font-size:.8rem;font-weight:600;margin-bottom:1.5rem;backdrop-filter:blur(10px)}
+.hero h1{font-size:clamp(3rem,10vw,6rem);font-weight:900;letter-spacing:-3px;background:linear-gradient(135deg,#fff 30%,#a29bfe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.hero h1 .dot{color:#ffd32a;-webkit-text-fill-color:#ffd32a}
+.hero p{font-size:1.1rem;color:#888;max-width:500px;margin:1.2rem auto 2rem;line-height:1.6}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center}
+.btn-prim{background:#6c5ce7;color:#fff;border:none;padding:1rem 2.5rem;border-radius:50px;font-size:1rem;font-weight:700;cursor:pointer;transition:.3s;text-decoration:none;display:inline-flex;align-items:center;gap:.5rem}
+.btn-prim:hover{transform:translateY(-2px);box-shadow:0 10px 40px rgba(108,92,231,.4)}
+.btn-out{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.15);padding:1rem 2.5rem;border-radius:50px;font-size:1rem;font-weight:600;cursor:pointer;transition:.3s;text-decoration:none}
+.btn-out:hover{border-color:#6c5ce7;background:rgba(108,92,231,.1)}
+/* NUMERI */
+.numeri{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:500px;width:100%;margin-top:3rem}
+.numero{text-align:center}
+.numero .val{font-size:1.8rem;font-weight:900;color:#a29bfe}
+.numero .lbl{font-size:.75rem;color:#555;text-transform:uppercase;letter-spacing:1px;margin-top:.2rem}
+/* SEZIONE RIMBORSI */
+.sezione{display:none;padding:2rem 1.5rem;max-width:800px;margin:0 auto;width:100%}
+.sezione.mostra{display:block}
+.back{display:inline-flex;align-items:center;gap:.3rem;color:#888;text-decoration:none;font-size:.85rem;margin-bottom:1.5rem;cursor:pointer;background:none;border:none;padding:0}
+.back:hover{color:#a29bfe}
+.sezione h2{font-size:1.5rem;font-weight:800;margin-bottom:.3rem}
+.sezione h2 .icona{display:inline-block;margin-right:.5rem}
+.sezione .sub{color:#888;font-size:.9rem;margin-bottom:1.5rem}
+/* CARDS RIMBORSI */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:2rem}
+.card{background:#12122a;border-radius:20px;padding:1.5rem;cursor:pointer;transition:.3s;border:2px solid transparent;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px}
+.card:hover{transform:translateY(-4px);border-color:var(--c);box-shadow:0 10px 40px rgba(108,92,231,.1)}
+.card .ico{font-size:2.2rem;margin-bottom:.5rem}
+.card h3{font-size:1.05rem;font-weight:700;margin-bottom:.3rem}
+.card .subtitle{font-size:.8rem;color:#888;margin-bottom:.8rem}
+.card .badge-card{display:inline-block;padding:.2rem .7rem;border-radius:20px;font-size:.7rem;font-weight:700;background:rgba(108,92,231,.2);color:#a29bfe}
+.card .info-row{display:flex;justify-content:space-between;font-size:.78rem;color:#666;margin-top:.8rem}
+/* DIRITTI */
+.diritti-grid{display:grid;gap:.7rem}
+.diritto-item{background:#12122a;border-radius:14px;padding:1.2rem;display:flex;justify-content:space-between;align-items:center;transition:.2s;border:1px solid rgba(255,255,255,.05)}
+.diritto-item:hover{border-color:rgba(108,92,231,.3)}
+.diritto-item .info{flex:1}
+.diritto-item .nome{font-weight:600;font-size:.9rem;margin-bottom:.2rem}
+.diritto-item .dettaglio{font-size:.78rem;color:#888}
+.diritto-item .destra{text-align:right;display:flex;align-items:center;gap:.8rem}
+.diritto-item .importo{font-size:1.1rem;font-weight:800;color:#a29bfe;white-space:nowrap}
+.diritto-item .prob{font-size:.7rem;color:#555}
+.btn-sm{background:#6c5ce7;color:#fff;border:none;padding:.5rem 1rem;border-radius:10px;font-size:.78rem;font-weight:600;cursor:pointer;transition:.2s;white-space:nowrap}
+.btn-sm:hover{background:#5a4bd1}
+/* FORM RICHIESTA */
+.form-box{background:#12122a;border-radius:20px;padding:1.5rem;margin-top:1.5rem;border:1px solid rgba(255,255,255,.05)}
+.form-box h3{font-size:1rem;margin-bottom:1rem;color:#a29bfe}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-grid .full{grid-column:1/-1}
+.form-group{margin-bottom:0}
+.form-group label{display:block;font-size:.78rem;font-weight:600;margin-bottom:.3rem;color:#888}
+.form-group input{width:100%;padding:.7rem 1rem;border:2px solid #1e1e3e;border-radius:10px;font-size:.9rem;background:#0a0a1a;color:#fff;transition:.2s;outline:none}
+.form-group input:focus{border-color:#6c5ce7}
+.form-group .finto-input{padding:.7rem 1rem;border-radius:10px;font-size:.9rem;background:#1e1e3e;color:#a29bfe;font-weight:700;border:2px solid transparent}
+.btn-full{width:100%;padding:.9rem;border-radius:12px;font-size:.95rem;font-weight:700;margin-top:.5rem}
+/* MODALE */
+.modale{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modale.mostra{display:flex}
+.modale-card{background:#12122a;border-radius:24px;padding:2.5rem 2rem;text-align:center;max-width:380px;width:100%;border:1px solid rgba(255,255,255,.08)}
+.modale-card .check{font-size:3.5rem;margin-bottom:1rem}
+.modale-card h2{font-size:1.5rem;font-weight:800;margin-bottom:.5rem}
+.modale-card p{color:#888;font-size:.88rem;margin-bottom:.5rem;line-height:1.5}
+.modale-card .importone{font-size:2.5rem;font-weight:900;color:#a29bfe;margin:.8rem 0}
+.modale-card .codice{font-size:.7rem;color:#555}
+/* FOOTER */
+footer{text-align:center;padding:2rem;color:#444;font-size:.75rem;max-width:600px;margin:0 auto;line-height:1.6}
+@media(max-width:600px){.hero h1{font-size:2.5rem}.numeri{grid-template-columns:repeat(3,1fr)}.cards{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="badge">🔥 Oltre 4.200€ di rimborsi non reclamati a persona</div>
+  <h1>RIPRENDI<span class="dot">.</span>TI</h1>
+  <p>Scopri in 30 secondi a quali rimborsi hai diritto. Treni, voli, Amazon, banche, assicurazioni. Recupera ciò che è tuo.</p>
+  <div class="hero-btns">
+    <button class="btn-prim" onclick="mostraCategorie()">Scopri i tuoi rimborsi &#8594;</button>
+  </div>
+  <div class="numeri">
+    <div class="numero"><div class="val" id="numeriRimborsi">41</div><div class="lbl">Diritti</div></div>
+    <div class="numero"><div class="val" id="numeriMax">1.500€</div><div class="lbl">Max a persona</div></div>
+    <div class="numero"><div class="val">0€</div><div class="lbl">Costo per te</div></div>
+  </div>
+</section>
+
+<!-- CATEGORIE -->
+<section class="sezione" id="sezioneCategorie">
+  <h2>Scegli cosa recuperare</h2>
+  <p class="sub">Seleziona una categoria per vedere i rimborsi a cui hai diritto</p>
+  <div class="cards" id="catGrid"></div>
+</section>
+
+<!-- DETTAGLIO CATEGORIA -->
+<section class="sezione" id="sezioneDettaglio">
+  <button class="back" onclick="tornaCategorie()">&#8592; Tutte le categorie</button>
+  <h2><span class="icona" id="catIcon"></span><span id="catNome"></span></h2>
+  <p class="sub" id="catSub"></p>
+  <div id="catLoader" style="text-align:center;padding:2rem;color:#555">Caricamento...</div>
+  <div id="catContent" style="display:none">
+    <div class="diritti-grid" id="dirittiGrid"></div>
+    <div id="formRichiesta"></div>
+  </div>
+</section>
+
+<!-- MODALE SUCCESSO -->
+<div class="modale" id="modale">
+  <div class="modale-card">
+    <div class="check">&#9989;</div>
+    <h2>Rimborso avviato!</h2>
+    <p id="modaleMsg"></p>
+    <div class="importone" id="modaleImporto"></div>
+    <div class="codice" id="modaleCodice"></div>
+    <button class="btn-prim" onclick="chiudiModale()" style="margin-top:1.5rem">Perfetto, grazie!</button>
+  </div>
+</div>
+
+<footer>
+  <strong>RIPRENDI.TI</strong> — Guadagniamo solo se tu recuperi soldi. Zero canoni, zero costi nascosti.<br>
+  Se non troviamo rimborsi per te, non paghi nulla. Sempre.
+</footer>
+
+<script>
+let catId = '';
+let catData = {};
+
+function mostraCategorie() {
+  document.getElementById('hero').style.display = 'none';
+  document.getElementById('sezioneCategorie').classList.add('mostra');
+  caricaCategorie();
+}
+
+async function caricaCategorie() {
+  const r = await fetch('/api/categorie');
+  const cats = await r.json();
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = cats.map(c => `
+    <div class="card" style="--c:${c.color}" onclick="apriCategoria('${c.id}')">
+      <div class="ico">${c.icon}</div>
+      <h3>${c.nome}</h3>
+      <div class="subtitle">${c.count} rimborsi possibili</div>
+      <span class="badge-card">Fino a ${c.max}€</span>
+      <div class="info-row"><span>${c.count} diritti</span><span>&#x2192;</span></div>
+    </div>
+  `).join('');
+}
+
+async function apriCategoria(id) {
+  catId = id;
+  document.getElementById('sezioneCategorie').classList.remove('mostra');
+  document.getElementById('sezioneDettaglio').classList.add('mostra');
+  document.getElementById('catLoader').style.display = 'block';
+  document.getElementById('catContent').style.display = 'none';
+
+  const r = await fetch(`/api/categoria/${id}`);
+  const cat = await r.json();
+  catData = cat;
+
+  document.getElementById('catIcon').textContent = cat.icon;
+  document.getElementById('catNome').textContent = cat.nome;
+  document.getElementById('catSub').textContent = `${cat.items.length} diritti di rimborso — fino a ${cat.max}€`;
+
+  const calc = await fetch(`/api/calcola/${id}`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ speso: 50 })
+  });
+  const data = await calc.json();
+
+  document.getElementById('catLoader').style.display = 'none';
+  document.getElementById('catContent').style.display = 'block';
+
+  let html = '';
+  data.risultati.forEach((d, i) => {
+    html += `<div class="diritto-item">
+      <div class="info">
+        <div class="nome">${d.diritto}</div>
+        <div class="dettaglio">Probabilità: ${d.probabilita}%</div>
+      </div>
+      <div class="destra">
+        <div><div class="importo">${d.importo_previsto}€</div><div class="prob">stimato</div></div>
+        <button class="btn-sm" onclick="mostraForm('${cat.nome}','${d.diritto.replace(/'/g,"\\'")}',${d.importo_previsto})">Richiedi</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('dirittiGrid').innerHTML = html;
+
+  // Form di richiesta
+  document.getElementById('formRichiesta').innerHTML = `
+    <div class="form-box">
+      <h3>&#x1F4CB; Invia richiesta rimborso</h3>
+      <p style="color:#666;font-size:.82rem;margin-bottom:1rem">Compila e clicca "Richiedi": facciamo tutto noi.</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Il tuo nome</label>
+          <input type="text" id="formNome" placeholder="Mario Rossi">
+        </div>
+        <div class="form-group">
+          <label>La tua email</label>
+          <input type="email" id="formEmail" placeholder="mario@email.com">
+        </div>
+        <div class="form-group full">
+          <label>Diritto selezionato</label>
+          <div class="finto-input" id="formDiritto">Seleziona un diritto sopra</div>
+        </div>
+        <div class="form-group full">
+          <label>Importo stimato</label>
+          <div class="finto-input" id="formImporto">0€</div>
+        </div>
+        <div class="form-group full">
+          <button class="btn-prim btn-full" id="btnInvia" onclick="inviaRichiesta()">Invia richiesta rimborso</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function mostraForm(categoria, diritto, importo) {
+  document.getElementById('formDiritto').textContent = `${categoria}: ${diritto}`;
+  document.getElementById('formImporto').textContent = `${importo.toFixed(2)}€`;
+  document.getElementById('btnInvia').dataset.diritto = diritto;
+  document.getElementById('btnInvia').dataset.categoria = categoria;
+  document.getElementById('btnInvia').dataset.importo = importo;
+}
+
+async function inviaRichiesta() {
+  const nome = document.getElementById('formNome').value;
+  const email = document.getElementById('formEmail').value;
+  if (!nome || !email) { alert('Inserisci nome ed email'); return; }
+
+  const btn = document.getElementById('btnInvia');
+  const diritto = btn.dataset.diritto;
+  const categoria = btn.dataset.categoria;
+  const importo = parseFloat(btn.dataset.importo) || 0;
+
+  const r = await fetch('/api/richiedi', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ nome, email, diritto, categoria, importo })
+  });
+  const data = await r.json();
+
+  document.getElementById('modaleMsg').textContent = data.messaggio;
+  document.getElementById('modaleImporto').textContent = `${importo.toFixed(2)}€`;
+  document.getElementById('modaleCodice').textContent = `Codice: ${data.id}`;
+  document.getElementById('modale').classList.add('mostra');
+}
+
+function chiudiModale() {
+  document.getElementById('modale').classList.remove('mostra');
+  tornaCategorie();
+}
+
+function tornaCategorie() {
+  document.getElementById('sezioneDettaglio').classList.remove('mostra');
+  document.getElementById('sezioneCategorie').classList.add('mostra');
+}
+</script>
+</body>
+</html>
