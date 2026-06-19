@@ -3,7 +3,13 @@ const path = require('path');
 const fs = require('fs');
 
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
-const CREDENTIALS_PATH = path.join(__dirname, '..', '..', 'config', 'gmail-credentials.json');
+const CREDENTIALS_PATHS = [
+  path.join(__dirname, '..', '..', 'config', 'gmail-credentials.json'),
+  path.join(__dirname, '..', '..', '..', 'etc', 'secrets', 'gmail-credentials.json'),
+  path.join(__dirname, '..', '..', 'gmail-credentials.json')
+].filter(p => {
+  try { return require('fs').existsSync(p) } catch(e) { return false }
+});
 const TOKEN_PATH = path.join(__dirname, '..', '..', 'config', 'gmail-token.json');
 
 class GmailAuth {
@@ -13,15 +19,16 @@ class GmailAuth {
 
   // Carica le credenziali da file
   loadCredentials() {
-    try {
-      if (fs.existsSync(CREDENTIALS_PATH)) {
-        const creds = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
+    if (CREDENTIALS_PATHS.length === 0) return false;
+    for (const p of CREDENTIALS_PATHS) {
+      try {
+        const creds = JSON.parse(fs.readFileSync(p, 'utf8'));
         const { client_secret, client_id, redirect_uris } = creds.web || creds.installed;
         this.oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
         return true;
+      } catch (e) {
+        console.log('Errore caricamento credenziali da', p, e.message);
       }
-    } catch (e) {
-      console.log('Errore caricamento credenziali:', e.message);
     }
     return false;
   }
