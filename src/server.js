@@ -4,6 +4,18 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+// PayPal credentials
+process.env.PAYPAL_CLIENT_ID = 'Ad1_Ejn5hfnbxN0d9xo4N3ASecaaa5Fl-doBlOOiWX2EbP3JFyQl_8hQdbOAtOVGlvU3iCfLTVD4B2vN';
+process.env.PAYPAL_CLIENT_SECRET = 'EKUZbpUV8gOg7DZ9VDSFBHRrOlPCBeaJv8-Vb2UnAa1PclfQXJackgIvx7HT1kO3c9hhqis-BSCfKuD3';
+
+// Gmail integration
+const gmailAuth = require('./moduli/gmail-auth');
+const GmailScanner = require('./moduli/gmail');
+
+// PayPal integration
+const paypal = require('./moduli/paypal');
+
+
 const DIRITTI = {
   treni: {
     nome: 'Treni',
@@ -148,6 +160,102 @@ app.post('/api/richiedi', (req, res) => {
 
 app.get('/api/storico', (req, res) => {
   res.json(richieste);
+});
+
+// ===================== GMAIL INTEGRAZIONE =====================
+
+// Stato connessione Gmail
+app.get('/api/gmail/status', (req, res) => {
+  const autenticato = gmailAuth.isReady();
+  if (autenticato) {
+    res.json({ autenticato: true, email: 'gianpaololiggieri6@gmail.com' });
+  } else if (gmailAuth.loadCredentials() && gmailAuth.loadToken()) {
+    res.json({ autenticato: true, email: 'gianpaololiggieri6@gmail.com' });
+  } else if (gmailAuth.loadCredentials()) {
+    res.json({ autenticato: false, url: gmailAuth.getAuthUrl() });
+  } else {
+    res.json({ autenticato: false, url: null, setup_necessaria: true });
+  }
+});
+
+// Callback OAuth Google
+app.get('/api/gmail/callback', async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.status(400).json({ errore: 'Codice mancante' });
+  try {
+    await gmailAuth.getToken(code);
+    gmailAuth.autoRefresh();
+    res.redirect('/?gmail=connected');
+  } catch (e) {
+    res.status(500).json({ errore: e.message });
+  }
+});
+
+// Scansione email
+app.post('/api/gmail/scansiona', async (req, res) => {
+  if (!gmailAuth.isReady()) {
+    if (!gmailAuth.loadCredentials() || !gmailAuth.loadToken()) {
+      return res.status(401).json({ errore: 'Gmail non connesso' });
+    }
+  }
+  try {
+    const scanner = new GmailScanner(gmailAuth.oAuth2Client);
+    const rimborsi = await scanner.scansionaRimborsi();
+    res.json({ trovati: rimborsi.length, rimborsi });
+  } catch (e) {
+    res.status(500).json({ errore: e.message });
+  }
+});
+
+// ===================== PAYPAL INTEGRAZIONE =====================
+
+// Stato connessione PayPal
+app.get('/api/paypal/config', (req, res) => {
+  if (!paypal.isConfigured()) {
+    return res.json({ configurato: false });
+  }
+  res.json({
+    configurato: true,
+    client_id: paypal.getClientId(),
+    mode: paypal.getMode()
+  });
+});
+
+// Crea ordine PayPal (commissione 20%)
+app.post('/api/paypal/create-order', async (req, res) => {
+  if (!paypal.isConfigured()) {
+    return res.status(400).json({ errore: 'PayPal non configurato. Vai in PUBBLICA.md per impostarlo.' });
+  }
+  const { importo, diritto, richiesta_id } = req.body;
+  if (!importo || !diritto) {
+    return res.status(400).json({ errore: 'Dati mancanti' });
+  }
+  const commissione = Math.round(importo * 20) / 100; // 20%
+  if (commissione < 1) {
+    return res.status(400).json({ errore: 'Importo troppo basso (min 1€)' });
+  }
+  try {
+    const descrizione = `RIPRENDI.TI - 20% su ${diritto}`;
+    const requestId = richiesta_id || `PP${Date.now()}`;
+    const order = await paypal.createOrder(commissione, descrizione, requestId);
+    res.json({ id: order.id, commissione });
+  } catch (e) {
+    res.status(500).json({ errore: e.message });
+  }
+});
+
+// Conferma pagamento PayPal
+app.post('/api/paypal/capture-order', async (req, res) => {
+  const { order_id } = req.body;
+  if (!order_id) return res.status(400).json({ errore: 'Order ID mancante' });
+  try {
+    const capture = await paypal.captureOrder(order_id);
+    const status = capture.status;
+    const pagato = status === 'COMPLETED';
+    res.json({ pagato, status, capture });
+  } catch (e) {
+    res.status(500).json({ errore: e.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

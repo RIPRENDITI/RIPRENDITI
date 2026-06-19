@@ -10,7 +10,7 @@
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:#0a0a1a;color:#fff;overflow-x:hidden;min-height:100vh}
 /* HERO */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;background:radial-gradient(ellipse at 50% 0%,#1a1a3e 0%,#0a0a1a 70%)}
-.hero::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");opacity:.5}
+.hero::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");opacity:.5;pointer-events:none}
 .badge{display:inline-block;background:rgba(108,92,231,.2);border:1px solid rgba(108,92,231,.3);color:#a29bfe;padding:.4rem 1.2rem;border-radius:50px;font-size:.8rem;font-weight:600;margin-bottom:1.5rem;backdrop-filter:blur(10px)}
 .hero h1{font-size:clamp(3rem,10vw,6rem);font-weight:900;letter-spacing:-3px;background:linear-gradient(135deg,#fff 30%,#a29bfe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
 .hero h1 .dot{color:#ffd32a;-webkit-text-fill-color:#ffd32a}
@@ -89,6 +89,7 @@ footer{text-align:center;padding:2rem;color:#444;font-size:.75rem;max-width:600p
   <p>Scopri in 30 secondi a quali rimborsi hai diritto. Treni, voli, Amazon, banche, assicurazioni. Recupera ciò che è tuo.</p>
   <div class="hero-btns">
     <button class="btn-prim" onclick="mostraCategorie()">Scopri i tuoi rimborsi &#8594;</button>
+    <button class="btn-out" id="btnGmail" onclick="connettiGmail()">&#128231; Connetti Gmail</button>
   </div>
   <div class="numeri">
     <div class="numero"><div class="val" id="numeriRimborsi">41</div><div class="lbl">Diritti</div></div>
@@ -124,7 +125,16 @@ footer{text-align:center;padding:2rem;color:#444;font-size:.75rem;max-width:600p
     <p id="modaleMsg"></p>
     <div class="importone" id="modaleImporto"></div>
     <div class="codice" id="modaleCodice"></div>
-    <button class="btn-prim" onclick="chiudiModale()" style="margin-top:1.5rem">Perfetto, grazie!</button>
+    <div id="paypalSection" style="margin-top:1.2rem;display:none">
+      <div style="font-size:.78rem;color:#888;margin-bottom:.5rem">Paga la commissione del 20% per attivare la pratica:</div>
+      <div style="font-weight:800;color:#a29bfe;margin-bottom:.8rem" id="commissioneTesto"></div>
+      <div id="paypal-button-container"></div>
+    </div>
+    <div id="paypalSuccesso" style="margin-top:1rem;display:none">
+      <div style="color:#00b894;font-weight:700;font-size:1rem">&#10003; Pagamento ricevuto!</div>
+      <div style="color:#888;font-size:.8rem;margin-top:.3rem">La tua richiesta è ora in lavorazione.</div>
+    </div>
+    <button class="btn-prim" onclick="chiudiModale()" style="margin-top:1.5rem" id="btnChiudiModale">Perfetto, grazie!</button>
   </div>
 </div>
 
@@ -236,6 +246,8 @@ function mostraForm(categoria, diritto, importo) {
   document.getElementById('btnInvia').dataset.importo = importo;
 }
 
+let richiestaCorrente = null;
+
 async function inviaRichiesta() {
   const nome = document.getElementById('formNome').value;
   const email = document.getElementById('formEmail').value;
@@ -253,10 +265,78 @@ async function inviaRichiesta() {
   });
   const data = await r.json();
 
+  richiestaCorrente = { id: data.id, importo, diritto, categoria };
+
   document.getElementById('modaleMsg').textContent = data.messaggio;
   document.getElementById('modaleImporto').textContent = `${importo.toFixed(2)}€`;
   document.getElementById('modaleCodice').textContent = `Codice: ${data.id}`;
+  document.getElementById('paypalSection').style.display = 'none';
+  document.getElementById('paypalSuccesso').style.display = 'none';
+  document.getElementById('paypal-button-container').innerHTML = '';
+  document.getElementById('btnChiudiModale').style.display = 'block';
   document.getElementById('modale').classList.add('mostra');
+
+  // Verifica se PayPal è configurato
+  try {
+    const cfg = await (await fetch('/api/paypal/config')).json();
+    if (cfg.configurato) {
+      await initPayPalButton(cfg, diritto, importo, data.id);
+    }
+  } catch(e) {}
+}
+
+async function initPayPalButton(cfg, diritto, importo, requestId) {
+  const commissione = Math.round(importo * 20) / 100;
+  if (commissione < 1) return;
+
+  document.getElementById('commissioneTesto').textContent = `${commissione.toFixed(2)}€ (20% di ${importo.toFixed(2)}€)`;
+  document.getElementById('paypalSection').style.display = 'block';
+
+  // Carica SDK PayPal se non già caricato
+  if (!document.getElementById('paypalSdk')) {
+    const script = document.createElement('script');
+    script.id = 'paypalSdk';
+    script.src = `https://www.paypal.com/sdk/js?client-id=${cfg.client_id}&currency=EUR`;
+    script.onload = () => renderPayPalButton(commissione, diritto, requestId);
+    document.head.appendChild(script);
+  } else {
+    renderPayPalButton(commissione, diritto, requestId);
+  }
+}
+
+function renderPayPalButton(commissione, diritto, requestId) {
+  if (typeof paypal === 'undefined') return;
+  document.getElementById('paypal-button-container').innerHTML = '';
+  paypal.Buttons({
+    createOrder: async () => {
+      const r = await fetch('/api/paypal/create-order', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ importo: commissione, diritto, richiesta_id: requestId })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.errore);
+      return data.id;
+    },
+    onApprove: async (data) => {
+      const r = await fetch('/api/paypal/capture-order', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ order_id: data.orderID })
+      });
+      const result = await r.json();
+      if (result.pagato) {
+        document.getElementById('paypalSection').style.display = 'none';
+        document.getElementById('paypalSuccesso').style.display = 'block';
+        document.getElementById('btnChiudiModale').style.display = 'none';
+      } else {
+        alert('Pagamento non completato: ' + result.status);
+      }
+    },
+    onError: (err) => {
+      alert('Errore PayPal: ' + err.message);
+    }
+  }).render('#paypal-button-container');
 }
 
 function chiudiModale() {
@@ -268,6 +348,46 @@ function tornaCategorie() {
   document.getElementById('sezioneDettaglio').classList.remove('mostra');
   document.getElementById('sezioneCategorie').classList.add('mostra');
 }
+
+// ===== GMAIL =====
+async function connettiGmail() {
+  const btn = document.getElementById('btnGmail');
+  btn.textContent = '⏳ Connessione...';
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/gmail/status');
+    const data = await r.json();
+    if (data.autenticato) {
+      alert('Gmail già connesso!');
+      btn.textContent = '✅ Gmail Connesso';
+      return;
+    }
+    if (data.setup_necessaria) {
+      alert('Configurazione necessaria: apri PUBBLICA.md per le istruzioni Google Cloud.');
+      btn.textContent = '📧 Connetti Gmail';
+      btn.disabled = false;
+      return;
+    }
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  } catch(e) {
+    alert('Errore connessione: ' + e.message);
+    btn.textContent = '📧 Connetti Gmail';
+    btn.disabled = false;
+  }
+}
+
+// Check Gmail status on load
+(async function() {
+  try {
+    const r = await fetch('/api/gmail/status');
+    const data = await r.json();
+    if (data.autenticato) {
+      document.getElementById('btnGmail').textContent = '✅ Gmail Connesso';
+    }
+  } catch(e) {}
+})();
 </script>
 </body>
 </html>

@@ -3,3 +3,5 @@ node_modules
 .git
 .DS_Store
 *.log
+config/gmail-token.json
+config/gmail-credentials.json

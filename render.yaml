@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: riprenditi
+    env: node
+    buildCommand: npm install
+    startCommand: node src/server.js
+    healthCheckPath: /api/categorie
+    plan: free
