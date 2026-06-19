@@ -8,7 +8,8 @@ const CREDENTIALS_PATHS = [
   '/etc/secrets/gmail-credentials.json',
   path.join(__dirname, '..', '..', 'gmail-credentials.json')
 ];
-const TOKEN_PATH = path.join(__dirname, '..', '..', 'config', 'gmail-token.json');
+const TOKEN_DIR = process.env.RENDER ? '/tmp' : path.join(__dirname, '..', '..', 'config');
+const TOKEN_PATH = path.join(TOKEN_DIR, 'gmail-token.json');
 
 class GmailAuth {
   constructor() {
