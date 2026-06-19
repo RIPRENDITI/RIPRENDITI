@@ -52,16 +52,25 @@ class GmailAuth {
   }
 
   // Genera URL per OAuth
-  getAuthUrl() {
+  getAuthUrl(redirectUri) {
     return this.oAuth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
-      prompt: 'consent'
+      prompt: 'consent',
+      redirect_uri: redirectUri || undefined
     });
   }
 
+  // Imposta redirect URI dinamicamente
+  setRedirectUri(uri) {
+    if (this.oAuth2Client) {
+      this.oAuth2Client.redirect_uris = [uri];
+    }
+  }
+
   // Scambia il codice con il token
-  async getToken(code) {
+  async getToken(code, redirectUri) {
+    this.oAuth2Client.redirect_uris = redirectUri ? [redirectUri] : this.oAuth2Client.redirect_uris;
     const { tokens } = await this.oAuth2Client.getToken(code);
     this.oAuth2Client.setCredentials(tokens);
     this.saveToken(tokens);

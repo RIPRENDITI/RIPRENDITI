@@ -163,12 +163,14 @@ app.get('/api/storico', (req, res) => {
 // Stato connessione Gmail
 app.get('/api/gmail/status', (req, res) => {
   const autenticato = gmailAuth.isReady();
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const redirectUri = `${baseUrl}/api/gmail/callback`;
   if (autenticato) {
     res.json({ autenticato: true, email: 'gianpaololiggieri6@gmail.com' });
   } else if (gmailAuth.loadCredentials() && gmailAuth.loadToken()) {
     res.json({ autenticato: true, email: 'gianpaololiggieri6@gmail.com' });
   } else if (gmailAuth.loadCredentials()) {
-    res.json({ autenticato: false, url: gmailAuth.getAuthUrl() });
+    res.json({ autenticato: false, url: gmailAuth.getAuthUrl(redirectUri), redirect_uri: redirectUri });
   } else {
     res.json({ autenticato: false, url: null, setup_necessaria: true });
   }
@@ -179,7 +181,9 @@ app.get('/api/gmail/callback', async (req, res) => {
   const { code } = req.query;
   if (!code) return res.status(400).json({ errore: 'Codice mancante' });
   try {
-    await gmailAuth.getToken(code);
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const redirectUri = `${baseUrl}/api/gmail/callback`;
+    await gmailAuth.getToken(code, redirectUri);
     gmailAuth.autoRefresh();
     res.redirect('/?gmail=connected');
   } catch (e) {
