@@ -4,10 +4,6 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// PayPal credentials
-process.env.PAYPAL_CLIENT_ID = 'Ad1_Ejn5hfnbxN0d9xo4N3ASecaaa5Fl-doBlOOiWX2EbP3JFyQl_8hQdbOAtOVGlvU3iCfLTVD4B2vN';
-process.env.PAYPAL_CLIENT_SECRET = 'EKUZbpUV8gOg7DZ9VDSFBHRrOlPCBeaJv8-Vb2UnAa1PclfQXJackgIvx7HT1kO3c9hhqis-BSCfKuD3';
-
 // Gmail integration
 const gmailAuth = require('./moduli/gmail-auth');
 const GmailScanner = require('./moduli/gmail');
