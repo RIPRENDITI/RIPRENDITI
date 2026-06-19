@@ -5,11 +5,9 @@ const fs = require('fs');
 const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
 const CREDENTIALS_PATHS = [
   path.join(__dirname, '..', '..', 'config', 'gmail-credentials.json'),
-  path.join(__dirname, '..', '..', '..', 'etc', 'secrets', 'gmail-credentials.json'),
+  '/etc/secrets/gmail-credentials.json',
   path.join(__dirname, '..', '..', 'gmail-credentials.json')
-].filter(p => {
-  try { return require('fs').existsSync(p) } catch(e) { return false }
-});
+];
 const TOKEN_PATH = path.join(__dirname, '..', '..', 'config', 'gmail-token.json');
 
 class GmailAuth {
